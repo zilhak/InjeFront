@@ -1,9 +1,21 @@
 body {
+  height: 100vh;
   min-height: 100vh;
-  background-color: red;
+  background-color: black;
   display: flex;
   justify-content: center;
   align-items: center;
   margin: 0;
   padding: 0;
+}
+
+.core-container {
+  width: 90%;
+  height: 70%;
+  background-color: gray;
+}
+
+.todo-list {
+  height: 100%;
+  background-color: darkgray;
 }

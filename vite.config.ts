@@ -1,9 +1,15 @@
 import { defineConfig } from 'vite'
 import path from 'path'
+import { babel } from '@rollup/plugin-babel'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [],
+  plugins: [
+    babel({
+      babelHelpers: 'bundled',
+      extensions: ['.ts'],
+    })
+  ],
   resolve: {
     alias: {
       '@' : path.resolve(__dirname, './src'),
