@@ -1,12 +1,17 @@
 body {
   height: 100vh;
   min-height: 100vh;
-  background-color: black;
+  background-color: darkgray;
   display: flex;
   justify-content: center;
   align-items: center;
   margin: 0;
   padding: 0;
+}
+
+main {
+  display: flex;
+  flex-direction: column;
 }
 
 .core-container {
@@ -15,7 +20,7 @@ body {
   background-color: gray;
 }
 
-.todo-list {
-  height: 100%;
-  background-color: darkgray;
-}
+
+
+
+
