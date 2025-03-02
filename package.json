@@ -5,13 +5,16 @@
   "scripts": {
     "serve": "vite",
     "build": "vite build",
-    "test": "vite test"
+    "test": "jest test"
   },
   "devDependencies": {
     "@babel/core": "^7.26.9",
     "@rollup/plugin-babel": "^6.0.4",
+    "@types/jest": "^29.5.14",
     "@types/node": "^22.13.8",
+    "jest": "^29.7.0",
     "ts-essentials": "^10.0.4",
+    "ts-jest": "^29.2.6",
     "typescript": "^5.8.2",
     "vite": "^6.2.0"
   }
