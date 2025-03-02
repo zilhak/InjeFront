@@ -90,5 +90,5 @@
 }
 
 .todo-list-button.apply {
-  background-color: var(--button-color-apply);
+  color: var(--button-color-apply);
 }

@@ -36,6 +36,14 @@ export class ItemList<T extends HTMLElement> {
     }
   }
   
+  move(item: T, list: ItemList<T>) {
+    const node = this.findNode(item);
+    if (node) {
+      this.deleteNode(node);
+      list.addItem(node.item);
+    }
+  }
+  
   clear() {
     this.head = null;
     this.tail = null;
@@ -45,6 +53,14 @@ export class ItemList<T extends HTMLElement> {
     }
   }
   
+  private findNode(item: T) {
+    for (const node of this) {
+      if (node.item === item) {
+        return node;
+      }
+    }
+  }
+
   private deleteNode(node: ItemNode<T>) {
     if (node.prev) {
       node.prev.next = node.next;

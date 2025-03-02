@@ -43,7 +43,6 @@ const TodoList = (): HTMLElement => {
   return container;
 }
 
-
 const setEventListeners = (
   todoListInput: HTMLElement, 
   todoListItemContainer: HTMLElement, 
@@ -51,15 +50,11 @@ const setEventListeners = (
   id: number
 ) => {
   let appliedButton: 'all' | 'active' | 'completed' = 'all';
+  let activeItemCount = 0;
+  let completedItemCount = 0;
+  
   const activeItemList = new ItemList<HTMLElement>();
   const completedItemList = new ItemList<HTMLElement>();
-
-  const dispatchHandler = (list: HTMLElement[]) => {
-    todoListItemContainer.innerHTML = "";
-    list.forEach((item) => {
-      todoListItemContainer.appendChild(item);
-    });
-  }
 
   todoListInput.addEventListener("input", (event) => {
     const input = event.target as HTMLInputElement;
@@ -67,13 +62,13 @@ const setEventListeners = (
     activeItemList.addItem(constructTodoListItem(value, id), (item) => {
       item.addEventListener("click", (event: MouseEvent) => {
         const target = event.target;
-        if (target instanceof HTMLButtonElement) {
+        if (target instanceof HTMLButtonElement || item.classList.contains("completed")) {
           return;
         }
 
-        if (!item.classList.contains("completed")) {
-          item.classList.add("completed");
-        }
+        item.classList.toggle("completed");
+        activeItemList.move(item, completedItemList);
+        dispatch();
       });
 
       const deleteButton = item.querySelector(".todo-list-item-delete-button");
@@ -83,44 +78,79 @@ const setEventListeners = (
           detail: { item: item }
         });
         deleteButton.dispatchEvent(deleteEvent);
-        activeItemList.dispatch(dispatchHandler);
+        dispatch();
       });
     });
-    activeItemList.dispatch(dispatchHandler);
+    dispatch();
 
     input.value = "";
   });
   
+  const itemLeftText = todoListFooter.querySelector(".todo-list-footer-left > span");
   const allButton = todoListFooter.querySelector(".todo-list-button[name='todo-list-button-all']");
   const activeButton = todoListFooter.querySelector(".todo-list-button[name='todo-list-button-active']");
   const completedButton = todoListFooter.querySelector(".todo-list-button[name='todo-list-button-completed']");
+  allButton?.classList.add("apply");
   
   allButton?.addEventListener("click", () => {
+    if (appliedButton === 'all') return;
+
     appliedButton = 'all';
     allButton.classList.add("apply");
     activeButton?.classList.remove("apply");
     completedButton?.classList.remove("apply");
+    dispatch();
   });
+
   activeButton?.addEventListener("click", () => {
+    if (appliedButton === 'active') return;
+
     appliedButton = 'active';
     allButton?.classList.remove("apply");
     activeButton.classList.add("apply");
     completedButton?.classList.remove("apply");
+    dispatch();
   });
+
   completedButton?.addEventListener("click", () => {
+    if (appliedButton === 'completed') return;
+
     appliedButton = 'completed';
     allButton?.classList.remove("apply");
     activeButton?.classList.remove("apply");
     completedButton.classList.add("apply");
+    dispatch();
   });
   
   const clearCompletedButton = todoListFooter.querySelector(".todo-list-button[name='todo-list-button-clear-completed']");
   clearCompletedButton?.addEventListener("click", () => {
     completedItemList.clear();
+    dispatch();
   });
   
+  const dispatch = () => {
+    todoListItemContainer.innerHTML = "";
+    activeItemList.dispatch((list: HTMLElement[]) => {
+      activeItemCount = list.length;
+      list.forEach((item) => {
+        todoListItemContainer.appendChild(item);
+      });
+    });
+    completedItemList.dispatch((list: HTMLElement[]) => {
+      completedItemCount = list.length;
+      list.forEach((item) => {
+        todoListItemContainer.appendChild(item);
+      });
+    });
+    if (itemLeftText) {
+      itemLeftText.textContent = `${activeItemCount} items left`;
+    }
+    if (clearCompletedButton) {
+      clearCompletedButton.textContent = `Clear completed (${completedItemCount})`;
+    }
+  }
+
+  dispatch();
 }
-
-
 
 export default TodoList;
