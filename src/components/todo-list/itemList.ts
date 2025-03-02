@@ -47,7 +47,7 @@ export class ItemList<T extends HTMLElement> {
   clear(filter?: (item: T) => boolean) {
     for (const node of this) {
       if (!filter || filter(node.item)) {
-        node.item.remove();
+        this.deleteNode(node);
       }
     }
   }

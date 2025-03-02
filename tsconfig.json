@@ -26,5 +26,5 @@
       "@style/*": ["static/style/*"],
     }
   },
-  "include": ["src"],
+  "include": ["src", "test"]
 }

@@ -106,7 +106,7 @@ const setEventListeners = (
   
   const clearCompletedButton = todoListFooter.querySelector(".todo-list-button[name='todo-list-button-clear-completed']");
   clearCompletedButton?.addEventListener("click", () => {
-    itemList.clear();
+    itemList.clear(completedFilter);
     dispatch();
   });
   
