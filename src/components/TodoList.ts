@@ -5,6 +5,7 @@ import {
   constructFooter, 
   constructTodoListItem 
 } from "./todo-list/constructor";
+import { ItemDragManager } from "./todo-list/itemDragManager";
 import { ItemList } from "./todo-list/itemList";
 
 const TodoList = (): HTMLElement => {
@@ -39,29 +40,12 @@ const setEventListeners = (
     const input = event.target as HTMLInputElement;
     const value = input.value;
     itemList.addItem(constructTodoListItem(value, id), (item) => {
-      item.addEventListener("click", (event: MouseEvent) => {
-        const target = event.target;
-        if (target instanceof HTMLButtonElement || item.classList.contains("completed")) {
-          return;
-        }
-        
-        const checkbox = item.querySelector("input[type='checkbox']");
-        if (checkbox && checkbox instanceof HTMLInputElement) {
-          checkbox.checked = !checkbox.checked;
-        }
-
-        dispatch();
-      });
-
-      const deleteButton = item.querySelector(".todo-list-item-delete-button");
-      deleteButton?.addEventListener("click", (_event) => {
-        const deleteEvent = new CustomEvent("delete", {
-          bubbles: true,
-          detail: { item: item }
-        });
-        deleteButton.dispatchEvent(deleteEvent);
-        dispatch();
-      });
+      registerItemListener(item, dispatch);
+    });
+    const itemDragManager = ItemDragManager.getInstance();
+    itemDragManager.setReleaseHandler((item, target, isBefore) => {
+      itemList.move(item, target, isBefore);
+      dispatch();
     });
     dispatch();
 
@@ -151,6 +135,45 @@ const completedFilter = (item: HTMLElement) => {
     return checkbox.checked;
   }
   return false;
+}
+
+const registerItemListener = (item: HTMLElement, dispatch: () => void) => {
+  const deleteButton = item.querySelector(".todo-list-item-delete-button");
+  deleteButton?.addEventListener("click", (_event) => {
+    const deleteEvent = new CustomEvent("delete", {
+      bubbles: true,
+      detail: { item: item }
+    });
+    deleteButton.dispatchEvent(deleteEvent);
+    dispatch();
+  });
+  
+  const itemDragManager = ItemDragManager.getInstance();
+  item.addEventListener("mousedown", (event: MouseEvent) => {
+    const target = event.target;
+    if (target instanceof HTMLButtonElement || item.classList.contains("completed")) {
+      return;
+    }
+    
+    itemDragManager.selectItem(item, event.clientX, event.clientY);
+    event.preventDefault();
+  });
+
+  item.addEventListener("mouseup", (event: MouseEvent) => {
+    if (!itemDragManager.isDragging()) {
+      const target = event.target;
+      if (target instanceof HTMLButtonElement || item.classList.contains("completed")) {
+        return;
+      }
+      
+      const checkbox = item.querySelector("input[type='checkbox']");
+      if (checkbox && checkbox instanceof HTMLInputElement) {
+        checkbox.checked = !checkbox.checked;
+      }
+
+      dispatch();
+    }
+  });
 }
 
 export default TodoList;

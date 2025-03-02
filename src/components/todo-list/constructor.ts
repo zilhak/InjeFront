@@ -80,6 +80,10 @@ export const constructTodoListItem = (value: string, componentId: number): HTMLE
     classList: ["todo-list-item"],
   });
   
+  const selectMarker = Object.assign(document.createElement("div"), {
+    classList: ["todo-list-item-select-marker"],
+  });
+  
   const checkbox = Object.assign(document.createElement("input"), {
     type: "checkbox",
   });
@@ -94,6 +98,7 @@ export const constructTodoListItem = (value: string, componentId: number): HTMLE
     textContent: "삭제",
   });
   
+  todoListItem.appendChild(selectMarker);
   todoListItem.appendChild(checkbox);
   todoListItem.appendChild(textItem);
   todoListItem.appendChild(deleteButton);

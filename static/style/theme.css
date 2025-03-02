@@ -8,6 +8,8 @@
   --button-color-hover: #cccccc;
   --button-color-active: #e8e8e8;
   --button-color-apply: #cc1616;
+  
+  --color-marker: green;
 }
 
 
@@ -20,6 +22,7 @@ body {
   align-items: center;
   margin: 0;
   padding: 0;
+  overflow: hidden;
 }
 
 main {

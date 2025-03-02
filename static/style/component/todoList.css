@@ -42,7 +42,7 @@
   height: 40px;
   min-height: 40px;
   border-bottom: 1px solid black;
-  padding: 0 8px;
+  padding-right: 8px;
   background-color: var(--background-color-item);
   align-items: center;
 }
@@ -56,9 +56,19 @@
   color: var(--text-color-completed);
 }
 
+.todo-list-item-select-marker {
+  width: 4px;
+  height: 100%;
+}
+
+.todo-list-item.target .todo-list-item-select-marker {
+  background-color: var(--color-marker);
+}
+
 .todo-list-item-text {
   flex: 1;
   font-size: 14px;
+  margin-left: 4px;
 }
 
 .todo-list-item-delete-button {

@@ -36,12 +36,20 @@ export class ItemList<T extends HTMLElement> {
     }
   }
   
-  move(item: T, list: ItemList<T>) {
+  move(item: T, target: T, isBefore: boolean) {
     const node = this.findNode(item);
-    if (node) {
-      this.deleteNode(node);
-      list.addItem(node.item);
+    const targetNode = this.findNode(target);
+    
+    if (!node || !targetNode) {
+      return;
     }
+    
+    if (node.item === targetNode.item) {
+      return;
+    }
+    
+    this.popNode(node);
+    this.insertNode(node, targetNode, isBefore);
   }
   
   clear(filter?: (item: T) => boolean) {
@@ -59,8 +67,32 @@ export class ItemList<T extends HTMLElement> {
       }
     }
   }
+  
+  private insertNode(node: ItemNode<T>, target: ItemNode<T>, isBefore: boolean) {
+    if (isBefore) {
+      node.prev = target.prev;
+      node.next = target;
 
-  private deleteNode(node: ItemNode<T>) {
+      if (target.prev) {
+        target.prev.next = node;
+      } else {
+        this.head = node;
+      }
+      target.prev = node;
+    } else {
+      node.prev = target;
+      node.next = target.next;
+      
+      if (target.next) {
+        target.next.prev = node;
+      } else {
+        this.tail = node;
+      }
+      target.next = node;
+    }
+  }
+  
+  private popNode(node: ItemNode<T>) {
     if (node.prev) {
       node.prev.next = node.next;
     } else {
@@ -72,7 +104,10 @@ export class ItemList<T extends HTMLElement> {
     } else {
       this.tail = node.prev;
     }
-    
+  }
+
+  private deleteNode(node: ItemNode<T>) {
+    this.popNode(node);
     node.item.remove();
   }
   
