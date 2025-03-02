@@ -1,14 +1,15 @@
 :root {
   --text-color-default: black;
   --text-color-completed: #777777;
-  --background-color-default: darkgray;
+  --background-color-default: white;
   --background-color-card: var(--background-color-default);
-  --background-color-item: #dddddd;
-  --button-color-default: #dddddd;
-  --button-color-hover: #cccccc;
-  --button-color-active: #e8e8e8;
+  --background-color-item: white;
+  --button-color-default: #e8e8e8;
+  --button-color-hover: #dddddd;
+  --button-color-active: #f0f0f0;
   --button-color-apply: #cc1616;
-  
+  --border-color-weak: #dddddd;
+
   --color-marker: green;
 }
 
@@ -16,7 +17,7 @@
 body {
   height: 100vh;
   min-height: 100vh;
-  background-color: darkgray;
+  background-color: var(--background-color-default);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -33,7 +34,7 @@ main {
 .core-container {
   width: 90%;
   height: 70%;
-  background-color: gray;
+  background-color: var(--background-color-default);
 }
 
 button {

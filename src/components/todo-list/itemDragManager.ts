@@ -11,7 +11,8 @@ export class ItemDragManager {
   private draggingItem: HTMLElement | null = null;
   private moveEventListener: EventListener | null = null;
   private endEventListener: EventListener | null = null;
-  
+  private cancelEventListener: EventListener | null = null;
+
   private belowItem: HTMLElement | null = null;
   private releaseHandler: (item: HTMLElement, target: HTMLElement, isBefore: boolean) => void = () => {};
 
@@ -54,8 +55,16 @@ export class ItemDragManager {
       
       this.releaseItem(mouseEvent.clientY);
     };
+    this.cancelEventListener = (event: Event) => {
+      const keyboardEvent = event as KeyboardEvent;
+      if (keyboardEvent.key === "Escape") {
+        this.cancel();
+        this.originItem = null;
+      }
+    };
     document.body.addEventListener("mousemove", this.moveEventListener);
     document.body.addEventListener("mouseup", this.endEventListener);
+    document.body.addEventListener("keydown", this.cancelEventListener);
   }
 
   public moveDragging(x: number, y: number) {
@@ -99,8 +108,8 @@ export class ItemDragManager {
     }
   }
   
-  public isDragging(): boolean {
-    return this.draggingItem !== null;
+  public isClick(item: HTMLElement): boolean {
+    return !this.draggingItem && !!this.originItem && this.originItem == item;
   }
   
   public cancel() {
@@ -110,8 +119,20 @@ export class ItemDragManager {
     if (this.draggingItem) {
       this.draggingItem.remove();
     }
+    if (this.belowItem) {
+      this.belowItem.classList.remove('target');
+    }
     
-    this.originItem = null;
+    if (this.moveEventListener) {
+      document.body.removeEventListener("mousemove", this.moveEventListener);
+    }
+    if (this.endEventListener) {
+      document.body.removeEventListener("mouseup", this.endEventListener);
+    }
+    if (this.cancelEventListener) {
+      document.body.removeEventListener("keydown", this.cancelEventListener);
+    }
+    
     this.draggingItem = null;
     this.belowItem = null;
   }

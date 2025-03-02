@@ -36,9 +36,14 @@ const setEventListeners = (
   
   const itemList = new ItemList<HTMLElement>();
 
-  todoListInput.addEventListener("input", (event) => {
-    const input = event.target as HTMLInputElement;
-    const value = input.value;
+  todoListInput.addEventListener("keydown", (event) => {
+    if (!(event instanceof KeyboardEvent) || 
+          event.key !== "Enter" || 
+        !(event.target instanceof HTMLInputElement)) {
+      return;
+    }
+
+    const value = event.target.value;
     itemList.addItem(constructTodoListItem(value, id), (item) => {
       registerItemListener(item, dispatch);
     });
@@ -49,7 +54,7 @@ const setEventListeners = (
     });
     dispatch();
 
-    input.value = "";
+    event.target.value = "";
   });
   
   const itemLeftText = todoListFooter.querySelector(".todo-list-footer-left > span");
@@ -160,7 +165,7 @@ const registerItemListener = (item: HTMLElement, dispatch: () => void) => {
   });
 
   item.addEventListener("mouseup", (event: MouseEvent) => {
-    if (!itemDragManager.isDragging()) {
+    if (itemDragManager.isClick(item)) {
       const target = event.target;
       if (target instanceof HTMLButtonElement || item.classList.contains("completed")) {
         return;
