@@ -52,6 +52,9 @@ const setEventListeners = (
       itemList.move(item, target, isBefore);
       dispatch();
     });
+    itemDragManager.setPreviewHandler((item, target, isBefore) => {
+      dispatch(item, target, isBefore);
+    });
     dispatch();
 
     event.target.value = "";
@@ -99,12 +102,26 @@ const setEventListeners = (
     dispatch();
   });
   
-  const dispatch = () => {
+  const dispatch = (previewTarget?: HTMLElement, moveTarget?: HTMLElement, isBefore?: boolean) => {
+    if(!!previewTarget !== !!moveTarget) {
+      throw new Error("previewTarget and moveTarget cannot be different");
+    }
+
     todoListItemContainer.innerHTML = "";
     itemList.dispatch((activeList: HTMLElement[], completedList: HTMLElement[]) => {
       if (appliedButton !== 'completed') {
         activeList.forEach((item) => {
-          todoListItemContainer.appendChild(item);
+          if (previewTarget && moveTarget && moveTarget === item) {
+            if (isBefore) {
+              todoListItemContainer.appendChild(previewTarget);
+              todoListItemContainer.appendChild(item);
+            } else {
+              todoListItemContainer.appendChild(item);
+              todoListItemContainer.appendChild(previewTarget);
+            }
+          } else if (!previewTarget || previewTarget !== item) {
+            todoListItemContainer.appendChild(item);
+          }
         });
       }
 

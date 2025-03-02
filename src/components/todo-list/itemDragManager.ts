@@ -15,12 +15,23 @@ export class ItemDragManager {
 
   private belowItem: HTMLElement | null = null;
   private releaseHandler: (item: HTMLElement, target: HTMLElement, isBefore: boolean) => void = () => {};
+  
+  private previewTimer: ReturnType<typeof setTimeout> | null = null;
+  private timerTarget: HTMLElement | null = null;
+  
+  private previewHandler: (item?: HTMLElement, target?: HTMLElement, isBefore?: boolean) => void = () => {};
+  private previewLocTarget: HTMLElement | null = null;
+  private isBefore: boolean = false;
 
   private constructor() {
   }
 
   public setReleaseHandler(handler: (item: HTMLElement, target: HTMLElement, isBefore: boolean) => void) {
     this.releaseHandler = handler;
+  }
+  
+  public setPreviewHandler(handler: (item?: HTMLElement, target?: HTMLElement, isBefore?: boolean) => void) {
+    this.previewHandler = handler;
   }
 
   public static getInstance(): ItemDragManager {
@@ -33,6 +44,12 @@ export class ItemDragManager {
   public selectItem(item: HTMLElement, originX: number, originY: number) {
     this.originOpacity = item.style.opacity;
     this.originItem = item;
+    this.timerTarget = null;
+    const checkbox = item.querySelector('input[type="checkbox"]');
+    if (checkbox && checkbox instanceof HTMLInputElement && checkbox.checked) {
+      return;
+    }
+
     this.originX = originX;
     this.originY = originY;
     this.deltaX = item.offsetLeft - originX;
@@ -59,6 +76,7 @@ export class ItemDragManager {
       const keyboardEvent = event as KeyboardEvent;
       if (keyboardEvent.key === "Escape") {
         this.cancel();
+        this.previewHandler();
         this.originItem = null;
       }
     };
@@ -94,7 +112,38 @@ export class ItemDragManager {
 
       if (belowItem) {
         const item = belowItem.closest('.todo-list-item');
-        if (item && item instanceof HTMLElement) {
+        if (item instanceof HTMLElement) {
+          const isBefore = item.offsetTop + item.offsetHeight / 2 > y;
+          if (item === this.originItem) {
+            item.classList.remove('target');
+            return;
+          } else if (this.previewLocTarget && this.previewLocTarget === item && this.isBefore === isBefore) {
+            return;
+          }
+          
+          if ((this.timerTarget !== item || this.isBefore !== isBefore) && item instanceof HTMLElement) {
+            this.isBefore = isBefore;
+            this.timerTarget = item;
+            if (this.previewTimer) {
+              clearTimeout(this.previewTimer);
+            }
+
+            this.previewTimer = setTimeout(() => {
+              this.previewTimer = null;
+              if (this.originItem && item instanceof HTMLElement) {
+                this.previewHandler(this.originItem, item, this.isBefore);
+                if (this.belowItem) {
+                  this.belowItem.classList.remove('target');
+                }
+                this.originItem.classList.add('target');
+              }
+            }, 2000);
+          }
+        }
+        
+        const checkbox = belowItem.querySelector('input[type="checkbox"]');
+        if (item && item instanceof HTMLElement && 
+          checkbox && checkbox instanceof HTMLInputElement && !checkbox.checked) {
           if (item !== this.belowItem) {
             this.belowItem?.classList.remove('target');
             this.belowItem = item;
@@ -115,6 +164,7 @@ export class ItemDragManager {
   public cancel() {
     if (this.originItem) {
       this.originItem.style.opacity = this.originOpacity;
+      this.originItem.classList.remove('target');
     }
     if (this.draggingItem) {
       this.draggingItem.remove();
@@ -133,6 +183,7 @@ export class ItemDragManager {
       document.body.removeEventListener("keydown", this.cancelEventListener);
     }
     
+    this.previewLocTarget = null;
     this.draggingItem = null;
     this.belowItem = null;
   }
@@ -141,8 +192,12 @@ export class ItemDragManager {
     if (this.belowItem) {
       this.belowItem.classList.remove('target');
       if (this.originItem) {
-        this.releaseHandler(this.originItem, this.belowItem, 
-          offsetY > (this.belowItem.offsetTop + this.belowItem.offsetHeight / 2));
+        if (this.previewLocTarget) {
+          this.releaseHandler(this.originItem, this.previewLocTarget, this.isBefore);
+        } else {
+          this.releaseHandler(this.originItem, this.belowItem, 
+            offsetY > (this.belowItem.offsetTop + this.belowItem.offsetHeight / 2));
+        }
       }
     }
     this.cancel();
