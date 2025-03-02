@@ -1,3 +1,16 @@
+:root {
+  --text-color-default: black;
+  --text-color-completed: #777777;
+  --background-color-default: darkgray;
+  --background-color-card: var(--background-color-default);
+  --background-color-item: #dddddd;
+  --button-color-default: #dddddd;
+  --button-color-hover: #cccccc;
+  --button-color-active: #e8e8e8;
+  --button-color-apply: #cc1616;
+}
+
+
 body {
   height: 100vh;
   min-height: 100vh;
@@ -20,6 +33,20 @@ main {
   background-color: gray;
 }
 
+button {
+  border: 1px solid black;
+  border-radius: 2px;
+  padding: 0 8px;
+  background-color: var(--button-color-default);
+}
+
+button:hover {
+  background-color: var(--button-color-hover);
+}
+
+button:active {
+  background-color: var(--button-color-active);
+}
 
 
 

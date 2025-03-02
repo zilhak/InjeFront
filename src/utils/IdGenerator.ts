@@ -12,6 +12,9 @@ class IdGenerator {
   }
 
   public static generateId(): number {
+    if (this.getInstance().id > 100000)
+      this.getInstance().id = 0;
+    
     return this.getInstance().id++;
   }
 }

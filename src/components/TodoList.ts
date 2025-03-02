@@ -1,3 +1,12 @@
+import IdGenerator from "../utils/IdGenerator";
+import { 
+  constructTodoListInput, 
+  constructTodoListItemContainer, 
+  constructFooter, 
+  constructTodoListItem 
+} from "./todo-list/constructor";
+import { ItemList } from "./todo-list/itemList";
+
 // <div class="todo-list">
 //   <input name="todo-list-input" class="todo-list-input" type="text" placeholder="What needs to be done?" />
 //   <div class="todo-list-item-container"/>
@@ -16,80 +25,102 @@
 //   </div>
 // </div>
 
-const makeUniqueId = () => {
-  let nextId = 0;
-  return () => {
-    nextId++;
-    return nextId;
-  };
-};
-
 const TodoList = (): HTMLElement => {
   const container = document.createElement("div");
   container.classList.add("todo-list");
 
-  const todoListInput = Object.assign(document.createElement("input"), {
-    name: "todo-list-input",
-    classList: ["todo-list-input"],
-    type: "text",
-    placeholder: "What needs to be done?",
-    dataset: {
-      id: makeUniqueId(),
-    },
-  });
-
-  const todoListItemContainer = document.createElement("div");
-  todoListItemContainer.classList.add("todo-list-item-container");
-
-  const todoListFooter = document.createElement("div");
-  todoListFooter.classList.add("todo-list-footer");
-
-  const todoListFooterLeft = document.createElement("div");
-  todoListFooterLeft.classList.add("todo-list-footer-left");
-
-  const leftText = document.createElement("span");
-  leftText.textContent = "0 items left";
-  todoListFooterLeft.appendChild(leftText);
-
-  const todoListFooterCenter = document.createElement("div");
-  todoListFooterCenter.classList.add("todo-list-footer-center");
-
-  const allButton = document.createElement("button");
-  allButton.classList.add("todo-list-button");
-  allButton.textContent = "All";
-
-  const activeButton = document.createElement("button");
-  activeButton.classList.add("todo-list-button");
-  activeButton.name = "todo-list-button-active";
-  activeButton.textContent = "Active";
-
-  const completedButton = document.createElement("button");
-  completedButton.classList.add("todo-list-button");
-  completedButton.name = "todo-list-button-completed";
-  completedButton.textContent = "Completed";
-
-  todoListFooterCenter.appendChild(allButton);
-  todoListFooterCenter.appendChild(activeButton);
-  todoListFooterCenter.appendChild(completedButton);
-
-  const todoListFooterRight = document.createElement("div");
-  todoListFooterRight.classList.add("todo-list-footer-right");
-
-  const clearCompletedButton = document.createElement("button");
-  clearCompletedButton.classList.add("todo-list-button");
-  clearCompletedButton.name = "todo-list-button-clear-completed";
-  clearCompletedButton.textContent = "Clear completed";
-
-  todoListFooterRight.appendChild(clearCompletedButton);
-
-  todoListFooter.appendChild(todoListFooterLeft);
-  todoListFooter.appendChild(todoListFooterCenter);
-  todoListFooter.appendChild(todoListFooterRight);
+  const id = IdGenerator.generateId();
+  const todoListInput = constructTodoListInput();
+  const todoListItemContainer = constructTodoListItemContainer();
+  const todoListFooter = constructFooter();
+  
+  setEventListeners(todoListInput, todoListItemContainer, todoListFooter, id);
 
   container.appendChild(todoListInput);
   container.appendChild(todoListItemContainer);
   container.appendChild(todoListFooter);
+  
   return container;
 }
+
+
+const setEventListeners = (
+  todoListInput: HTMLElement, 
+  todoListItemContainer: HTMLElement, 
+  todoListFooter: HTMLElement,
+  id: number
+) => {
+  let appliedButton: 'all' | 'active' | 'completed' = 'all';
+  const activeItemList = new ItemList<HTMLElement>();
+  const completedItemList = new ItemList<HTMLElement>();
+
+  const dispatchHandler = (list: HTMLElement[]) => {
+    todoListItemContainer.innerHTML = "";
+    list.forEach((item) => {
+      todoListItemContainer.appendChild(item);
+    });
+  }
+
+  todoListInput.addEventListener("input", (event) => {
+    const input = event.target as HTMLInputElement;
+    const value = input.value;
+    activeItemList.addItem(constructTodoListItem(value, id), (item) => {
+      item.addEventListener("click", (event: MouseEvent) => {
+        const target = event.target;
+        if (target instanceof HTMLButtonElement) {
+          return;
+        }
+
+        if (!item.classList.contains("completed")) {
+          item.classList.add("completed");
+        }
+      });
+
+      const deleteButton = item.querySelector(".todo-list-item-delete-button");
+      deleteButton?.addEventListener("click", (_event) => {
+        const deleteEvent = new CustomEvent("delete", {
+          bubbles: true,
+          detail: { item: item }
+        });
+        deleteButton.dispatchEvent(deleteEvent);
+        activeItemList.dispatch(dispatchHandler);
+      });
+    });
+    activeItemList.dispatch(dispatchHandler);
+
+    input.value = "";
+  });
+  
+  const allButton = todoListFooter.querySelector(".todo-list-button[name='todo-list-button-all']");
+  const activeButton = todoListFooter.querySelector(".todo-list-button[name='todo-list-button-active']");
+  const completedButton = todoListFooter.querySelector(".todo-list-button[name='todo-list-button-completed']");
+  
+  allButton?.addEventListener("click", () => {
+    appliedButton = 'all';
+    allButton.classList.add("apply");
+    activeButton?.classList.remove("apply");
+    completedButton?.classList.remove("apply");
+  });
+  activeButton?.addEventListener("click", () => {
+    appliedButton = 'active';
+    allButton?.classList.remove("apply");
+    activeButton.classList.add("apply");
+    completedButton?.classList.remove("apply");
+  });
+  completedButton?.addEventListener("click", () => {
+    appliedButton = 'completed';
+    allButton?.classList.remove("apply");
+    activeButton?.classList.remove("apply");
+    completedButton.classList.add("apply");
+  });
+  
+  const clearCompletedButton = todoListFooter.querySelector(".todo-list-button[name='todo-list-button-clear-completed']");
+  clearCompletedButton?.addEventListener("click", () => {
+    completedItemList.clear();
+  });
+  
+}
+
+
 
 export default TodoList;
