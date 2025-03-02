@@ -44,12 +44,11 @@ export class ItemList<T extends HTMLElement> {
     }
   }
   
-  clear() {
-    this.head = null;
-    this.tail = null;
-
+  clear(filter?: (item: T) => boolean) {
     for (const node of this) {
-      node.item.remove();
+      if (!filter || filter(node.item)) {
+        node.item.remove();
+      }
     }
   }
   
@@ -77,13 +76,19 @@ export class ItemList<T extends HTMLElement> {
     node.item.remove();
   }
   
-  dispatch(callback: (list: T[]) => void) {
-    const list = [];
+  dispatch(callback: (activeList: T[], completedList: T[]) => void, activeFilter?: (item: T) => boolean, completedFilter?: (item: T) => boolean) {
+    const activeList = [];
+    const completedList = [];
     for (const node of this) {
-      list.push(node.item);
+      if (!activeFilter || activeFilter(node.item)) {
+        activeList.push(node.item);
+      }
+      if (completedFilter && completedFilter(node.item)) {
+        completedList.push(node.item);
+      }
     }
 
-    callback(list);
+    callback(activeList, completedList);
   }  
   
   [Symbol.iterator](): Iterator<ItemNode<T>> {

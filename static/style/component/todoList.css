@@ -47,14 +47,18 @@
   align-items: center;
 }
 
+.todo-list-item input[type="checkbox"] {
+  display: none;
+}
+
+.todo-list-item input[type="checkbox"]:checked + .todo-list-item-text {
+  text-decoration: line-through;
+  color: var(--text-color-completed);
+}
+
 .todo-list-item-text {
   flex: 1;
   font-size: 14px;
-}
-
-.todo-list-item.completed .todo-list-item-text {
-  text-decoration: line-through;
-  color: var(--text-color-completed);
 }
 
 .todo-list-item-delete-button {

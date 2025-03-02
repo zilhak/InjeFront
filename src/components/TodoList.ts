@@ -7,24 +7,6 @@ import {
 } from "./todo-list/constructor";
 import { ItemList } from "./todo-list/itemList";
 
-// <div class="todo-list">
-//   <input name="todo-list-input" class="todo-list-input" type="text" placeholder="What needs to be done?" />
-//   <div class="todo-list-item-container"/>
-//   <div class="todo-list-footer">
-//     <div class="todo-list-footer-left">
-//       <span name="todo-list-left-text">0 items left</span>
-//     </div>
-//     <div class="todo-list-footer-center">
-//       <button class="todo-list-button" name="todo-list-button-all">All</button>
-//       <button class="todo-list-button" name="todo-list-button-active">Active</button>
-//       <button class="todo-list-button" name="todo-list-button-completed">Completed</button>            
-//     </div>
-//     <div class="todo-list-footer-right">
-//       <button class="todo-list-button" name="todo-list-button-clear-completed">Clear completed</button>            
-//     </div>
-//   </div>
-// </div>
-
 const TodoList = (): HTMLElement => {
   const container = document.createElement("div");
   container.classList.add("todo-list");
@@ -50,24 +32,24 @@ const setEventListeners = (
   id: number
 ) => {
   let appliedButton: 'all' | 'active' | 'completed' = 'all';
-  let activeItemCount = 0;
-  let completedItemCount = 0;
   
-  const activeItemList = new ItemList<HTMLElement>();
-  const completedItemList = new ItemList<HTMLElement>();
+  const itemList = new ItemList<HTMLElement>();
 
   todoListInput.addEventListener("input", (event) => {
     const input = event.target as HTMLInputElement;
     const value = input.value;
-    activeItemList.addItem(constructTodoListItem(value, id), (item) => {
+    itemList.addItem(constructTodoListItem(value, id), (item) => {
       item.addEventListener("click", (event: MouseEvent) => {
         const target = event.target;
         if (target instanceof HTMLButtonElement || item.classList.contains("completed")) {
           return;
         }
+        
+        const checkbox = item.querySelector("input[type='checkbox']");
+        if (checkbox && checkbox instanceof HTMLInputElement) {
+          checkbox.checked = !checkbox.checked;
+        }
 
-        item.classList.toggle("completed");
-        activeItemList.move(item, completedItemList);
         dispatch();
       });
 
@@ -124,33 +106,51 @@ const setEventListeners = (
   
   const clearCompletedButton = todoListFooter.querySelector(".todo-list-button[name='todo-list-button-clear-completed']");
   clearCompletedButton?.addEventListener("click", () => {
-    completedItemList.clear();
+    itemList.clear();
     dispatch();
   });
   
   const dispatch = () => {
     todoListItemContainer.innerHTML = "";
-    activeItemList.dispatch((list: HTMLElement[]) => {
-      activeItemCount = list.length;
-      list.forEach((item) => {
-        todoListItemContainer.appendChild(item);
-      });
-    });
-    completedItemList.dispatch((list: HTMLElement[]) => {
-      completedItemCount = list.length;
-      list.forEach((item) => {
-        todoListItemContainer.appendChild(item);
-      });
-    });
-    if (itemLeftText) {
-      itemLeftText.textContent = `${activeItemCount} items left`;
-    }
-    if (clearCompletedButton) {
-      clearCompletedButton.textContent = `Clear completed (${completedItemCount})`;
-    }
+    itemList.dispatch((activeList: HTMLElement[], completedList: HTMLElement[]) => {
+      if (appliedButton !== 'completed') {
+        activeList.forEach((item) => {
+          todoListItemContainer.appendChild(item);
+        });
+      }
+
+      if (appliedButton !== 'active') {
+        completedList.forEach((item) => {
+          todoListItemContainer.appendChild(item);
+        });
+      }
+
+      if (itemLeftText) {
+        itemLeftText.textContent = `${activeList.length} items left`;
+      }
+      if (clearCompletedButton) {
+        clearCompletedButton.textContent = `Clear completed (${completedList.length})`;
+      }
+    }, activeFilter, completedFilter);
   }
 
   dispatch();
+}
+
+const activeFilter = (item: HTMLElement) => {
+  const checkbox = item.querySelector("input[type='checkbox']");
+  if (checkbox && checkbox instanceof HTMLInputElement) {
+    return !checkbox.checked;
+  }
+  return false;
+}
+
+const completedFilter = (item: HTMLElement) => {
+  const checkbox = item.querySelector("input[type='checkbox']");
+  if (checkbox && checkbox instanceof HTMLInputElement) {
+    return checkbox.checked;
+  }
+  return false;
 }
 
 export default TodoList;

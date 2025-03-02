@@ -80,18 +80,22 @@ export const constructTodoListItem = (value: string, componentId: number): HTMLE
     classList: ["todo-list-item"],
   });
   
+  const checkbox = Object.assign(document.createElement("input"), {
+    type: "checkbox",
+  });
+  
   const textItem = Object.assign(document.createElement("span"), {
     classList: ["todo-list-item-text"],
     textContent: value,
   });
-  
-  todoListItem.appendChild(textItem);
   
   const deleteButton = Object.assign(document.createElement("button"), {
     classList: ["todo-list-item-delete-button"],
     textContent: "삭제",
   });
   
+  todoListItem.appendChild(checkbox);
+  todoListItem.appendChild(textItem);
   todoListItem.appendChild(deleteButton);
   
   todoListItem.dataset.id = componentId.toString();
