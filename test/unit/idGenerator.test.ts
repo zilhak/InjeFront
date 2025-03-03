@@ -1,4 +1,4 @@
-import IdGenerator from "../../src/utils/IdGenerator.ts";
+import IdGenerator from "../../src/utils/IdGenerator";
 
 describe("IdGenerator", () => {
   let id_generated = new Set<number>();

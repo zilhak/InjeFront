@@ -3,8 +3,9 @@
   "version": "1.0",
   "private": true,
   "scripts": {
-    "serve": "vite",
-    "build": "vite build",
+    "serve": "webpack-dev-server --config webpack.config.js",
+    "build": "webpack",
+    "start": "webpack serve --open",
     "test": "jest test"
   },
   "devDependencies": {
@@ -16,11 +17,18 @@
     "@testing-library/jest-dom": "^6.6.3",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.13.8",
+    "copy-webpack-plugin": "^13.0.0",
+    "css-loader": "^7.1.2",
+    "html-webpack-plugin": "^5.6.3",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
+    "style-loader": "^4.0.0",
     "ts-essentials": "^10.0.4",
     "ts-jest": "^29.2.6",
+    "ts-loader": "^9.5.2",
     "typescript": "^5.8.2",
-    "vite": "^6.2.0"
+    "webpack": "^5.98.0",
+    "webpack-cli": "^6.0.1",
+    "webpack-dev-server": "^5.2.0"
   }
 }

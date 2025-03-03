@@ -1,4 +1,4 @@
-import TodoList from "@component/TodoList.ts";
+import TodoList from "@component/TodoList";
 
 const container = document.querySelector<HTMLDivElement>("main.core-container");
 if (!container) {
