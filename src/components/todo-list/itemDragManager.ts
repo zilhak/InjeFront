@@ -21,7 +21,7 @@ export class ItemDragManager {
   
   private previewHandler: (item?: HTMLElement, target?: HTMLElement, isBefore?: boolean) => void = () => {};
   private previewLocTarget: HTMLElement | null = null;
-  private isBefore: boolean = false;
+  private previewBefore: boolean = false;
 
   private constructor() {
   }
@@ -113,32 +113,7 @@ export class ItemDragManager {
       if (belowItem) {
         const item = belowItem.closest('.todo-list-item');
         if (item instanceof HTMLElement) {
-          const isBefore = item.offsetTop + item.offsetHeight / 2 > y;
-          if (item === this.originItem) {
-            item.classList.remove('target');
-            return;
-          } else if (this.previewLocTarget && this.previewLocTarget === item && this.isBefore === isBefore) {
-            return;
-          }
-          
-          if ((this.timerTarget !== item || this.isBefore !== isBefore) && item instanceof HTMLElement) {
-            this.isBefore = isBefore;
-            this.timerTarget = item;
-            if (this.previewTimer) {
-              clearTimeout(this.previewTimer);
-            }
-
-            this.previewTimer = setTimeout(() => {
-              this.previewTimer = null;
-              if (this.originItem && item instanceof HTMLElement) {
-                this.previewHandler(this.originItem, item, this.isBefore);
-                if (this.belowItem) {
-                  this.belowItem.classList.remove('target');
-                }
-                this.originItem.classList.add('target');
-              }
-            }, 2000);
-          }
+          this.registerPreviewTimer(item, y);
         }
         
         const checkbox = belowItem.querySelector('input[type="checkbox"]');
@@ -153,6 +128,9 @@ export class ItemDragManager {
           this.belowItem?.classList.remove('target');
           this.belowItem = null;
         }
+      } else {
+        this.belowItem?.classList.remove('target');
+        this.belowItem = null;
       }
     }
   }
@@ -189,18 +167,40 @@ export class ItemDragManager {
   }
 
   public releaseItem(offsetY: number) {
-    if (this.belowItem) {
+    if (this.originItem && this.belowItem) {
       this.belowItem.classList.remove('target');
-      if (this.originItem) {
-        if (this.previewLocTarget) {
-          this.releaseHandler(this.originItem, this.previewLocTarget, this.isBefore);
-        } else {
-          this.releaseHandler(this.originItem, this.belowItem, 
-            offsetY > (this.belowItem.offsetTop + this.belowItem.offsetHeight / 2));
-        }
+      if (this.previewLocTarget && (this.belowItem === this.previewLocTarget || this.belowItem === this.originItem)) {
+        this.releaseHandler(this.originItem, this.previewLocTarget, this.previewBefore);
+      } else {
+        this.releaseHandler(this.originItem, this.belowItem, 
+          offsetY > (this.belowItem.offsetTop + this.belowItem.offsetHeight / 2));
       }
     }
     this.cancel();
+  }
+  
+  private registerPreviewTimer(item: HTMLElement, y: number) {
+    const previewBefore = item.offsetTop + item.offsetHeight / 2 < y;
+    if (item === this.originItem || (this.previewLocTarget && this.previewLocTarget === item && this.previewBefore === previewBefore)) {
+      return;
+    }
+    
+    if ((this.timerTarget !== item || this.previewBefore !== previewBefore) && item instanceof HTMLElement) {
+      this.previewBefore = previewBefore;
+      this.timerTarget = item;
+      if (this.previewTimer) {
+        clearTimeout(this.previewTimer);
+      }
+
+      this.previewTimer = setTimeout(() => {
+        this.previewTimer = null;
+        if (this.originItem && item instanceof HTMLElement && this.belowItem) {
+          this.belowItem?.classList.remove('target');
+          this.previewLocTarget = this.belowItem;
+          this.previewHandler(this.originItem, item, this.previewBefore);
+        }
+      }, 2000);
+    }
   }
 }
 

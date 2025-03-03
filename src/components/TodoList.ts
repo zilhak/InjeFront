@@ -113,11 +113,11 @@ const setEventListeners = (
         activeList.forEach((item) => {
           if (previewTarget && moveTarget && moveTarget === item) {
             if (isBefore) {
-              todoListItemContainer.appendChild(previewTarget);
               todoListItemContainer.appendChild(item);
+              todoListItemContainer.appendChild(previewTarget);
             } else {
-              todoListItemContainer.appendChild(item);
               todoListItemContainer.appendChild(previewTarget);
+              todoListItemContainer.appendChild(item);
             }
           } else if (!previewTarget || previewTarget !== item) {
             todoListItemContainer.appendChild(item);
