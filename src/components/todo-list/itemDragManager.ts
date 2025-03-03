@@ -126,21 +126,21 @@ export class ItemDragManager {
           if (checkbox instanceof HTMLInputElement) {
             if (checkbox.checked) {
               this.belowItem?.classList.remove('target');
-              this.belowItem = null;
               return;
             }
             
             if (item !== this.belowItem) {
               this.belowItem?.classList.remove('target');
               this.belowItem = item;
-              this.belowItem.classList.add('target');
             }
+            this.belowItem?.classList.add('target');
           }
+          return;
         }
-      } else {
-        this.belowItem?.classList.remove('target');
-        this.belowItem = null;
       }
+
+      this.belowItem?.classList.remove('target');
+      this.belowItem = null;
     }
   }
   
