@@ -44,6 +44,8 @@ const setEventListeners = (
     }
 
     const value = event.target.value;
+    if (!value) return;
+
     itemList.addItem(constructTodoListItem(value, id), (item) => {
       registerItemListener(item, dispatch);
     });
@@ -52,7 +54,7 @@ const setEventListeners = (
       itemList.move(item, target, isBefore);
       dispatch();
     });
-    itemDragManager.setPreviewHandler((item, target, isBefore) => {
+    itemDragManager.setDisplayHandler((item, target, isBefore) => {
       dispatch(item, target, isBefore);
     });
     dispatch();

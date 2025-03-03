@@ -1,5 +1,9 @@
 export class ItemDragManager {
   private static instance: ItemDragManager | null = null;
+  
+  private static readonly PREVIEW_ON_WAIT_TIME = 2000;
+  private static readonly DRAG_MINIMUM_DISTANCE = 5;
+
   private originItem: HTMLElement | null = null;
   private originOpacity: string = "1";
 
@@ -8,18 +12,18 @@ export class ItemDragManager {
   private deltaX: number = 0;
   private deltaY: number = 0;
 
+  private belowItem: HTMLElement | null = null;
   private draggingItem: HTMLElement | null = null;
+
   private moveEventListener: EventListener | null = null;
   private endEventListener: EventListener | null = null;
   private cancelEventListener: EventListener | null = null;
 
-  private belowItem: HTMLElement | null = null;
   private releaseHandler: (item: HTMLElement, target: HTMLElement, isBefore: boolean) => void = () => {};
+  private displayHandler: (item?: HTMLElement, target?: HTMLElement, isBefore?: boolean) => void = () => {};
   
   private previewTimer: ReturnType<typeof setTimeout> | null = null;
   private timerTarget: HTMLElement | null = null;
-  
-  private previewHandler: (item?: HTMLElement, target?: HTMLElement, isBefore?: boolean) => void = () => {};
   private previewLocTarget: HTMLElement | null = null;
   private previewBefore: boolean = false;
 
@@ -30,8 +34,8 @@ export class ItemDragManager {
     this.releaseHandler = handler;
   }
   
-  public setPreviewHandler(handler: (item?: HTMLElement, target?: HTMLElement, isBefore?: boolean) => void) {
-    this.previewHandler = handler;
+  public setDisplayHandler(handler: (item?: HTMLElement, target?: HTMLElement, isBefore?: boolean) => void) {
+    this.displayHandler = handler;
   }
 
   public static getInstance(): ItemDragManager {
@@ -70,13 +74,13 @@ export class ItemDragManager {
       this.moveEventListener = null;
       this.endEventListener = null;
       
-      this.releaseItem(mouseEvent.clientY);
+      this.releaseItem(mouseEvent.clientX, mouseEvent.clientY);
     };
     this.cancelEventListener = (event: Event) => {
       const keyboardEvent = event as KeyboardEvent;
       if (keyboardEvent.key === "Escape") {
         this.cancel();
-        this.previewHandler();
+        this.displayHandler();
         this.originItem = null;
       }
     };
@@ -86,12 +90,11 @@ export class ItemDragManager {
   }
 
   public moveDragging(x: number, y: number) {
-    const maxDistance = 5;
     const deltaX = this.originX - x;
     const deltaY = this.originY - y;
     if (this.originItem && !this.draggingItem && 
-      (deltaX < -maxDistance || maxDistance < deltaX || 
-      deltaY < -maxDistance || maxDistance < deltaY)) {
+      (deltaX < -ItemDragManager.DRAG_MINIMUM_DISTANCE || ItemDragManager.DRAG_MINIMUM_DISTANCE < deltaX || 
+      deltaY < -ItemDragManager.DRAG_MINIMUM_DISTANCE || ItemDragManager.DRAG_MINIMUM_DISTANCE < deltaY)) {
       this.originOpacity = this.originItem.style.opacity;
       this.originItem.style.opacity = "0.5";
       this.draggingItem = this.originItem.cloneNode(true) as HTMLElement;
@@ -112,21 +115,27 @@ export class ItemDragManager {
 
       if (belowItem) {
         const item = belowItem.closest('.todo-list-item');
+          
         if (item instanceof HTMLElement) {
-          this.registerPreviewTimer(item, y);
-        }
-        
-        const checkbox = belowItem.querySelector('input[type="checkbox"]');
-        if (item && item instanceof HTMLElement && 
-          checkbox && checkbox instanceof HTMLInputElement && !checkbox.checked) {
-          if (item !== this.belowItem) {
-            this.belowItem?.classList.remove('target');
-            this.belowItem = item;
-            this.belowItem.classList.add('target');
+          if (item.dataset.id != this.originItem?.dataset.id) {
+            return
           }
-        } else if (!item) {
-          this.belowItem?.classList.remove('target');
-          this.belowItem = null;
+          this.registerPreviewTimer(item, y);
+        
+          const checkbox = belowItem.querySelector('input[type="checkbox"]');
+          if (checkbox instanceof HTMLInputElement) {
+            if (checkbox.checked) {
+              this.belowItem?.classList.remove('target');
+              this.belowItem = null;
+              return;
+            }
+            
+            if (item !== this.belowItem) {
+              this.belowItem?.classList.remove('target');
+              this.belowItem = item;
+              this.belowItem.classList.add('target');
+            }
+          }
         }
       } else {
         this.belowItem?.classList.remove('target');
@@ -160,15 +169,21 @@ export class ItemDragManager {
     if (this.cancelEventListener) {
       document.body.removeEventListener("keydown", this.cancelEventListener);
     }
+    this.displayHandler();
     
     this.previewLocTarget = null;
     this.draggingItem = null;
     this.belowItem = null;
   }
 
-  public releaseItem(offsetY: number) {
-    if (this.originItem && this.belowItem) {
-      this.belowItem.classList.remove('target');
+  public releaseItem(offsetX: number, offsetY: number) {
+    this.belowItem?.classList.remove('target');
+    this.draggingItem?.remove();
+    this.draggingItem = null;
+
+    const belowItem = document.elementFromPoint(offsetX, offsetY);
+    const item = belowItem?.closest('.todo-list-item');
+    if (this.originItem && this.belowItem && item instanceof HTMLElement && item.dataset.id == this.originItem.dataset.id) {
       if (this.previewLocTarget && (this.belowItem === this.previewLocTarget || this.belowItem === this.originItem)) {
         this.releaseHandler(this.originItem, this.previewLocTarget, this.previewBefore);
       } else {
@@ -197,9 +212,9 @@ export class ItemDragManager {
         if (this.originItem && item instanceof HTMLElement && this.belowItem) {
           this.belowItem?.classList.remove('target');
           this.previewLocTarget = this.belowItem;
-          this.previewHandler(this.originItem, item, this.previewBefore);
+          this.displayHandler(this.originItem, item, this.previewBefore);
         }
-      }, 2000);
+      }, ItemDragManager.PREVIEW_ON_WAIT_TIME);
     }
   }
 }
